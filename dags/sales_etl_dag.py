@@ -7,7 +7,7 @@ from airflow.operators.bash import BashOperator
 import sys
 sys.path.append('/opt/airflow/scripts')  # Add this line before importing your script
 
-from etl_pipeline import extract_data, transform_data, load_data
+from scripts.etl_pipeline import extract_data, transform_data, load_data
 
 default_args = {
     'owner': 'airflow',
