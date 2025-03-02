@@ -36,28 +36,14 @@ data-engineering-pipeline/
 3. Start the containers:
 
 ```bash
-docker-compose up -d
-```
-
-4. Initialize Airflow (first time only):
-
-```bash
-docker exec -it airflow-webserver airflow db init
-docker exec -it airflow-webserver airflow users create \
-    --username admin \
-    --firstname Admin \
-    --lastname User \
-    --role Admin \
-    --email admin@example.com \
-    --password admin
+docker compose up -d
 ```
 
 ## Accessing the Services
 
-- **Airflow**: http://localhost:8081 (username: admin, password: admin)
+- **Airflow**: http://localhost:8081 (username: mohit, password: mohit@123)
 - **MinIO Console**: http://localhost:9001 (username: minio, password: minio123)
 - **Adminer**: http://localhost:8080 (System: PostgreSQL, Server: postgres, Username: postgres, Password: postgres, Database: datawarehouse)
-- **Jupyter Notebook**: http://localhost:8888 (Token is displayed in the container logs)
 
 ## Understanding the Pipeline
 
