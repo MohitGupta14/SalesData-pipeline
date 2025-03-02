@@ -75,7 +75,7 @@ This pipeline demonstrates a complete ETL (Extract, Transform, Load) process:
 4. **Orchestration**:
    - Airflow schedules and monitors the pipeline
    - Provides a visual interface to track job execution
-   - We can visualise our pipeline o port 8081
+   - We can visualise our pipeline on port 8081
    - <img width="1452" alt="Screenshot 2025-03-02 at 4 44 21 PM" src="https://github.com/user-attachments/assets/b59f8c97-99ef-4619-9f0f-3c3cab9048ed" />
 
 
