@@ -55,6 +55,9 @@ This pipeline demonstrates a complete ETL (Extract, Transform, Load) process:
 1. **Extract**: 
    - Generates sample sales data
    - Stores raw data in MinIO (S3-compatible storage)
+   - MinIO is a data lake, similar to AWS S3. After running the ETL container (check the YAML file), we can view our data in the MinIO UI. 
+   - <img width="1470" alt="Screenshot 2025-03-02 at 2 47 57 PM" src="https://github.com/user-attachments/assets/5ba1ce4a-923e-4c83-a717-5e2d406a549b" />
+
 
 2. **Transform**:
    - Adds date features (year, month, day, day of week)
@@ -65,6 +68,9 @@ This pipeline demonstrates a complete ETL (Extract, Transform, Load) process:
 3. **Load**:
    - Stores processed data in PostgreSQL
    - Creates summary tables for analytics
+   - We can visualize the PostgreSQL table in Adminer's UI on port 8080
+   - <img width="1390" alt="Screenshot 2025-03-02 at 2 53 26 PM" src="https://github.com/user-attachments/assets/ff43b0c9-c48c-4cc8-b1d9-57ba373ec20a" />
+
 
 4. **Orchestration**:
    - Airflow schedules and monitors the pipeline
