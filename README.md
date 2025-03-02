@@ -31,12 +31,15 @@ data-engineering-pipeline/
 └── README.md
 ```
 
-2. Clone the repo
+or 
+
+1. Clone the repo
 ```bash
 git clone https://github.com/MohitGupta14/SalesData-pipeline
 ```
+2. Open DockerHub and add path of your root folder to Settings<Resources<File Sharing 
 
-4. Start the containers:
+3. Start the containers:
 
 ```bash
 docker compose up -d
