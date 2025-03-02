@@ -1,0 +1,128 @@
+version: '3'
+
+services:
+  # PostgreSQL database to store processed data
+  postgres:
+    image: postgres:14
+    container_name: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: datawarehouse
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts:/opt/airflow/scripts 
+      - ./init-db:/docker-entrypoint-initdb.d 
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Adminer - database management UI
+  adminer:
+    image: adminer
+    container_name: adminer
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+
+  # MinIO - object storage for raw data (S3 compatible)
+  minio:
+    image: minio/minio
+    container_name: minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio123
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  # Custom ETL container with all necessary dependencies
+  etl:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: etl
+    volumes:
+      - ./scripts:/app/scripts
+      - ./data:/app/data
+    environment:
+      - POSTGRES_HOST=postgres
+      - MINIO_HOST=minio
+    depends_on:
+      - postgres
+      - minio
+    # Using shell script to install wait-for-it and then run it
+    command: >
+      /bin/bash -c "
+        apt-get update && 
+        apt-get install -y wait-for-it && 
+        wait-for-it postgres:5432 --timeout=30 -- 
+        python ./scripts/etl_pipeline.py
+      "
+
+  # Airflow - workflow orchestration
+  airflow-webserver:
+    image: apache/airflow:2.7.1
+    container_name: airflow-webserver
+    entrypoint: /bin/bash -c "airflow db init && \
+                airflow users create --username mohit --password mohit@123 --firstname mohit --lastname gupta --email mohit@gmail.com --role Admin && \
+                pip install minio && \
+                exec airflow webserver"
+    command: /bin/bash -c "pip install -r /requirements.txt && exec airflow webserver"
+    ports:
+      - "8081:8080"
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://postgres:postgres@postgres:5432/airflow
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      - AIRFLOW__CORE__DAGS_FOLDER=/opt/airflow/dags
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./scripts:/opt/airflow/scripts
+      - airflow_logs:/opt/airflow/logs
+    depends_on:
+      - postgres
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+  # Airflow scheduler
+  airflow-scheduler:
+    image: apache/airflow:2.7.1
+    container_name: airflow-scheduler
+    entrypoint: >
+      bash -c "
+        pip install minio &&
+        airflow scheduler
+      "
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://postgres:postgres@postgres:5432/airflow
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      - AIRFLOW__CORE__DAGS_FOLDER=/opt/airflow/dags
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./scripts:/opt/airflow/scripts
+      - airflow_logs:/opt/airflow/logs
+    depends_on:
+      - postgres
+      - airflow-webserver
+
+volumes:
+  postgres_data:
+  minio_data:
+  airflow_logs:
